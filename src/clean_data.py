@@ -19,13 +19,14 @@ def clean_data(file_path: str, multiply_dict = None) -> pd.DataFrame:
     cleaned_df: pd.DataFrame
         The cleaned DataFrame.
     """
-    # Read in data
     if multiply_dict is None:
         multiply_dict = {}
+
+    # Read in data
     first_col_name = 'Workout #;"Date";"Workout Name";"Duration (sec)";"Exercise Name";"Set Order";"Weight (kg)";"Reps";"RPE";"Distance (meters)";"Seconds";"Notes";"Workout Notes"'
 
     df = pd.read_csv(
-        os.path.join(file_path),
+        file_path,
         header=1,
         names=[first_col_name, 'Extra'],
         usecols=[0, 1]
