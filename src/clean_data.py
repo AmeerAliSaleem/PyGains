@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-def clean_data(file_path: str, file_name: str = 'data_raw.csv') -> pd.DataFrame:
+def clean_data(file_path: str, multiply_dict = None) -> pd.DataFrame:
     """
     Reads in data from the raw Strong App .csv file and cleans it.
 
@@ -9,8 +9,10 @@ def clean_data(file_path: str, file_name: str = 'data_raw.csv') -> pd.DataFrame:
     ----------
     file_path : str
         The path to the raw Strong App data file.
-    file_name : str
-        The name of the raw Strong App data file (including extension).
+    multiply_dict: dict
+        A dictionary that maps column names to multiplicative factors.
+        Useful if the weight lifted for an exercise was only recorded for one arm,
+        e.g. measuring lat pulldown progression with the single-arm variant.
 
     Returns
     ----------
@@ -18,10 +20,12 @@ def clean_data(file_path: str, file_name: str = 'data_raw.csv') -> pd.DataFrame:
         The cleaned DataFrame.
     """
     # Read in data
+    if multiply_dict is None:
+        multiply_dict = {}
     first_col_name = 'Workout #;"Date";"Workout Name";"Duration (sec)";"Exercise Name";"Set Order";"Weight (kg)";"Reps";"RPE";"Distance (meters)";"Seconds";"Notes";"Workout Notes"'
 
     df = pd.read_csv(
-        os.path.join(file_path, file_name),
+        os.path.join(file_path),
         header=1,
         names=[first_col_name, 'Extra'],
         usecols=[0, 1]
@@ -44,9 +48,18 @@ def clean_data(file_path: str, file_name: str = 'data_raw.csv') -> pd.DataFrame:
     cleaned_df.columns = new_cols
 
     # Convert data types
+    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'], format='%Y-%m-%d %H:%M:%S')
     num_cols = ['Workout #', 'Duration (sec)', 'Weight (kg)', 'Reps', 'RPE', 'Distance (meters)', 'Seconds']
     cleaned_df[num_cols] = cleaned_df[num_cols].apply(pd.to_numeric, errors='coerce')
+
+    # Apply multiplicative transformations (if any)
+    if multiply_dict:
+        for key, value in multiply_dict.items():
+            print(f"key: {key}, value: {value}")
+            mask = cleaned_df['Exercise Name'] == key
+            cleaned_df.loc[mask, 'Weight (kg)'] = cleaned_df.loc[mask, 'Weight (kg)'] * value
 
     # Could potentially drop null values here too
 
     return cleaned_df
+
