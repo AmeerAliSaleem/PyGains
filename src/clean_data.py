@@ -1,6 +1,13 @@
 import os
 import pandas as pd
 
+from database import access_supabase_data
+
+def read_data_from_supabase() -> pd.DataFrame:
+    df = access_supabase_data('raw_data')
+
+    return df
+
 def clean_data(file_path: str, multiply_dict = None) -> pd.DataFrame:
     """
     Reads in data from the raw Strong App .csv file and cleans it.
@@ -64,3 +71,8 @@ def clean_data(file_path: str, multiply_dict = None) -> pd.DataFrame:
 
     return cleaned_df
 
+def main():
+    read_data_from_supabase()
+
+if __name__ == '__main__':
+    main()
